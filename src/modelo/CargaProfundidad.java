@@ -47,4 +47,6 @@ public class CargaProfundidad {
     public double getVelocidad() {
         return velocidad;
     }
+
+    public void setPosY(int posY) {this.posY = posY;}
 }

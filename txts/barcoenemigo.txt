@@ -58,9 +58,8 @@ public class BarcoEnemigo {
      * En niveles mayores, el tiempo entre lanzamientos baja un poco.
      */
     public void reiniciarTemporizador(Random random, int nivel) {
-        // Aumentamos los valores base para que tarden mucho más en lanzar [1]
-        int minimo = Math.max(8, 20 - nivel); // Antes era 2 y 8
-        int maximo = Math.max(15, 35 - nivel); // Antes era 5 y 15
+        int minimo = Math.max(2, 8 - nivel);
+        int maximo = Math.max(5, 15 - nivel);
         ticksParaLanzar = random.nextInt(maximo - minimo + 1) + minimo;
     }
 

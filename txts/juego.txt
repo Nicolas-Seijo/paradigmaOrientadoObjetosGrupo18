@@ -78,30 +78,26 @@ public class Juego {
      * Genera barcos enemigos si faltan barcos activos y todavía no se llegó a 12 en el nivel.
      */
     public void generarBarcos() {
-        // Se evalúa si hay espacio para más barcos en el mapa y en el nivel
-        if (barcos.size() < MAX_BARCOS_ACTIVOS && barcosGenerados < BARCOS_POR_NIVEL) {
+        while (barcos.size() < MAX_BARCOS_ACTIVOS && barcosGenerados < BARCOS_POR_NIVEL) {
+            boolean entraPorIzquierda = random.nextBoolean();
 
-            // Se agrega una probabilidad (ej. 5% por tick) para evitar que aparezcan pegados
-            if (random.nextDouble() < 0.05) {
-                boolean entraPorIzquierda = random.nextBoolean();
+            int posicionInicial;
+            int direccion;
 
-                int posicionInicial;
-                int direccion;
-
-                if (entraPorIzquierda) {
-                    posicionInicial = -30;
-                    direccion = 1;
-                } else {
-                    posicionInicial = ANCHO_MAPA + 30;
-                    direccion = -1;
-                }
-
-                int ticksParaLanzar = random.nextInt(6) + 3;
-
-                BarcoEnemigo barco = new BarcoEnemigo(posicionInicial, direccion, velocidadBarcos, ticksParaLanzar);
-                barcos.add(barco);
-                barcosGenerados++;
+            if (entraPorIzquierda) {
+                posicionInicial = -30;
+                direccion = 1;
+            } else {
+                posicionInicial = ANCHO_MAPA + 30;
+                direccion = -1;
             }
+
+            // El barco tarda unos ticks antes de lanzar su primera carga
+            int ticksParaLanzar = random.nextInt(6) + 3;
+
+            BarcoEnemigo barco = new BarcoEnemigo(posicionInicial, direccion, velocidadBarcos, ticksParaLanzar);
+            barcos.add(barco);
+            barcosGenerados++;
         }
     }
 
@@ -138,23 +134,9 @@ public class Juego {
         while (iterator.hasNext()) {
             CargaProfundidad carga = iterator.next();
 
-            // 1. Mover la carga hacia abajo sumando la velocidad de caída
-            carga.setPosY((int) (carga.getPosY() + velocidadCargas));
+            carga.caer();
 
-            // 2. Calcular la distancia exacta en este instante para el contacto físico
-            double dxContacto = carga.getPosX() - submarino.getPosX();
-            double dyContacto = carga.getPosY() - submarino.getPosY();
-            double distanciaContacto = Math.sqrt(dxContacto * dxContacto + dyContacto * dyContacto);
-
-            // 3. CONDICIÓN 1: Explota por contacto directo con el submarino (radio de 30)
-            if (distanciaContacto < 30) {
-                int puntosGanados = submarino.recibirImpacto(distanciaContacto);
-                sumarPuntos(puntosGanados);
-                iterator.remove();
-            }
-            // 4. CONDICIÓN 2: Explota al llegar a su profundidad de detonación aleatoria
-            else if (carga.getPosY() >= carga.getProfundidadDetonacion()) {
-                // Llama al método original de tu juego que calcula el daño de área
+            if (carga.debeExplotar()) {
                 procesarExplosion(carga);
                 iterator.remove();
             }
