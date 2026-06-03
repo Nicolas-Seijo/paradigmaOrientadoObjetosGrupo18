@@ -11,20 +11,26 @@ import java.util.Random;
  */
 public class Juego {
 
+    // N: Establece las variables de todo el juego
+    // N: Dimensión del mapa
     public static final int ANCHO_MAPA = 1000;
     public static final int PROFUNDIDAD_MIN_SUBMARINO = 300;
     public static final int PROFUNDIDAD_MAX_SUBMARINO = 800;
 
+    // N: Parámetros de los barcos
     private static final int MAX_BARCOS_ACTIVOS = 3;
     private static final int BARCOS_POR_NIVEL = 12;
 
+    // N: Parámetros de velocidad
     private static final double VELOCIDAD_INICIAL_BARCOS = 10.0;
     private static final double VELOCIDAD_INICIAL_CARGAS = 15.0;
 
+    // N: Declara al submarino, la lista de barcos y cargas para la clase, que después instanciará
     private Submarino submarino;
     private List<BarcoEnemigo> barcos;
     private List<CargaProfundidad> cargas;
 
+    // N: Declara las variables de la propia clase juego
     private int nivel;
     private double velocidadBarcos;
     private double velocidadCargas;
@@ -36,6 +42,7 @@ public class Juego {
 
     private Random random;
 
+    // N: Constructor de juego, instanciando la variable random y las listas.
     public Juego() {
         this.random = new Random();
         this.barcos = new ArrayList<>();
@@ -45,11 +52,13 @@ public class Juego {
     /**
      * Inicializa el juego en estado base.
      */
+    // N: Inicializa el juego en su estado "base", instanciando las entidades.
     public void iniciar() {
         submarino = new Submarino(ANCHO_MAPA / 2, 500);
         barcos = new ArrayList<>();
         cargas = new ArrayList<>();
 
+        // N: Además inicia las variables del juego en su estado inicial
         nivel = 1;
         velocidadBarcos = VELOCIDAD_INICIAL_BARCOS;
         velocidadCargas = VELOCIDAD_INICIAL_CARGAS;
@@ -63,31 +72,37 @@ public class Juego {
     /**
      * Actualiza un paso del juego.
      */
+    // N: Actualiza el juego, es la función principal que mueve todo
     public void actualizarJuego() {
+        // N: Revisa que el juego no haya terminado primero
         if (estaTerminado()) {
             return;
         }
 
-        generarBarcos();
-        moverBarcosYLanzarCargas();
-        moverCargasYProcesarExplosiones();
-        verificarCambioDeNivel();
+        // N: Si el juego está en marcha llama a las funciones que definen las mecánicas del juego
+        generarBarcos(); // N: Genera los barcos si hay menos de 3
+        moverBarcosYLanzarCargas(); // N: Mueve los barcos y lanza las cargas
+        moverCargasYProcesarExplosiones(); // N: Mueve las cargas en pantalla y procesa las explosiones para asignar puntos y/o quitar vida
+        verificarCambioDeNivel(); // N: Verifica el cambio de nivel para aumentar la velocidad
     }
 
     /**
      * Genera barcos enemigos si faltan barcos activos y todavía no se llegó a 12 en el nivel.
      */
     public void generarBarcos() {
-        while (barcos.size() < MAX_BARCOS_ACTIVOS && barcosGenerados < BARCOS_POR_NIVEL) {
-            boolean entraPorIzquierda = random.nextBoolean();
+        while (barcos.size() < MAX_BARCOS_ACTIVOS && barcosGenerados < BARCOS_POR_NIVEL) { // N: Mientras la cant. de barcos sea menor al máximo de activos por nivel
+            boolean entraPorIzquierda = random.nextBoolean(); // N: Con esto define si entra o no por izquierda, con el random devuelve "True" o "False" siendo falso entrar por derecha
 
+            // N: Declara las variables iniciales para después asignarlas según el valor booleano de entraPorIzquierda
             int posicionInicial;
             int direccion;
 
+            // N: Si entra por izquierda su pos. inicial es -30 y su dirección es positiva (a la derecha)
             if (entraPorIzquierda) {
                 posicionInicial = -30;
                 direccion = 1;
             } else {
+                // N: Caso contrario entra 30px más a la derecha que el ancho del mapa y su dirección es negativa (izquierda)
                 posicionInicial = ANCHO_MAPA + 30;
                 direccion = -1;
             }
@@ -95,9 +110,10 @@ public class Juego {
             // El barco tarda unos ticks antes de lanzar su primera carga
             int ticksParaLanzar = random.nextInt(6) + 3;
 
+            // N: Con toda la información definida se instancia el barco y se agrega a la lista
             BarcoEnemigo barco = new BarcoEnemigo(posicionInicial, direccion, velocidadBarcos, ticksParaLanzar);
             barcos.add(barco);
-            barcosGenerados++;
+            barcosGenerados++; // N: También se lleva un conteo de barcos para no generar de más por nivel
         }
     }
 
@@ -105,7 +121,7 @@ public class Juego {
      * Mueve los barcos, actualiza sus temporizadores y lanza cargas si corresponde.
      */
     private void moverBarcosYLanzarCargas() {
-        Iterator<BarcoEnemigo> iterator = barcos.iterator();
+        Iterator<BarcoEnemigo> iterator = barcos.iterator(); // N: Instancia el Barco como un "Iterator" una clase para iterar sobre objetos elemento por elemento
 
         while (iterator.hasNext()) {
             BarcoEnemigo barco = iterator.next();
