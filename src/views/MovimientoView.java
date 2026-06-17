@@ -24,9 +24,9 @@ public class MovimientoView extends JPanel implements KeyListener, ActionListene
 
     private Controlador controlador;
     private Timer timer;
-    private JLabel lblDatos;
+    private JLabel etiquetaDatosEstado;
 
-    private List<ExplosionVisual> visualesExplosiones;
+    private List<ExplosionVisual> listaExplosionesVisuales;
 
     private static final int Y_SUPERFICIE_AGUA = 100;
     private static final Color COLOR_AGUA = new Color(28, 107, 160);
@@ -37,16 +37,16 @@ public class MovimientoView extends JPanel implements KeyListener, ActionListene
 
     public MovimientoView(Controlador controlador) {
         this.controlador = controlador;
-        this.visualesExplosiones = new ArrayList<>();
+        this.listaExplosionesVisuales = new ArrayList<>();
 
         setLayout(null);
         setOpaque(true);
         setBackground(COLOR_AGUA);
 
-        lblDatos = new JLabel("");
-        lblDatos.setForeground(Color.WHITE);
-        lblDatos.setBounds(10, 10, 800, 30);
-        add(lblDatos);
+        etiquetaDatosEstado = new JLabel("");
+        etiquetaDatosEstado.setForeground(Color.WHITE);
+        etiquetaDatosEstado.setBounds(10, 10, 800, 30);
+        add(etiquetaDatosEstado);
 
         timer = new Timer(50, this);
         timer.start();
@@ -55,124 +55,107 @@ public class MovimientoView extends JPanel implements KeyListener, ActionListene
     @Override
     public void actionPerformed(ActionEvent e) {
         if (!controlador.getJuego().estaTerminado()) {
-            List<CargaProfundidad> cargasPrevias = new ArrayList<>(controlador.getJuego().getCargas());
 
             controlador.actualizarJuego();
 
-            for (CargaProfundidad cargaPrevia : cargasPrevias) {
-                if (cargaPrevia.debeExplotar()) {
-                    visualesExplosiones.add(new ExplosionVisual(
-                            cargaPrevia.getPosX() + 10,
-                            cargaPrevia.getProfundidadDetonacion() + 10
-                    ));
-                }
+            for (int[] coordenadas : controlador.getJuego().getExplosionesRecientes()) {
+                listaExplosionesVisuales.add(new ExplosionVisual(coordenadas[0], coordenadas[1]));
             }
 
             actualizarAnimacionesExplosion();
             dibujarEstado();
         } else {
             timer.stop();
-            lblDatos.setText("JUEGO TERMINADO - Puntaje Final: " + controlador.getJuego().getPuntaje());
+            etiquetaDatosEstado.setText("JUEGO TERMINADO - Puntaje Final: " + controlador.getJuego().getPuntaje());
             repaint();
         }
     }
 
     private void actualizarAnimacionesExplosion() {
-        Iterator<ExplosionVisual> iterator = visualesExplosiones.iterator();
-        while (iterator.hasNext()) {
-            ExplosionVisual explosion = iterator.next();
+        Iterator<ExplosionVisual> iteradorExplosiones = listaExplosionesVisuales.iterator();
+        while (iteradorExplosiones.hasNext()) {
+            ExplosionVisual explosion = iteradorExplosiones.next();
             explosion.decrementarTicks();
             if (explosion.estaTerminada()) {
-                iterator.remove();
+                iteradorExplosiones.remove();
             }
         }
     }
 
     private void dibujarEstado() {
-        String texto = String.format("Nivel: %d | Puntaje: %d | Vidas: %d | Salud: %d",
+        String textoEstado = String.format("Nivel: %d | Puntaje: %d | Vidas: %d | Salud: %d",
                 controlador.getJuego().getNivel(),
                 controlador.getJuego().getPuntaje(),
                 controlador.getJuego().getSubmarino().getVidas(),
                 controlador.getJuego().getSubmarino().getSalud());
-        lblDatos.setText(texto);
+        etiquetaDatosEstado.setText(textoEstado);
 
-        // Al usar dibujo directo, solo necesitamos repintar el panel
         repaint();
     }
 
     @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        Graphics2D g2d = (Graphics2D) g;
+    protected void paintComponent(Graphics graficosBase) {
+        super.paintComponent(graficosBase);
+        Graphics2D graficos2D = (Graphics2D) graficosBase;
 
-        // 1. Cielo y Agua
-        g2d.setColor(COLOR_SUPERFICIE_CIELO);
-        g2d.fillRect(0, 0, getWidth(), Y_SUPERFICIE_AGUA);
-        g2d.setColor(Color.WHITE);
-        g2d.drawLine(0, Y_SUPERFICIE_AGUA, getWidth(), Y_SUPERFICIE_AGUA);
+        graficos2D.setColor(COLOR_SUPERFICIE_CIELO);
+        graficos2D.fillRect(0, 0, getWidth(), Y_SUPERFICIE_AGUA);
+        graficos2D.setColor(Color.WHITE);
+        graficos2D.drawLine(0, Y_SUPERFICIE_AGUA, getWidth(), Y_SUPERFICIE_AGUA);
 
-        // 2. Barcos
-        g2d.setColor(COLOR_BARCO);
+        graficos2D.setColor(COLOR_BARCO);
         for (BarcoEnemigo barco : controlador.getJuego().getBarcos()) {
-            int bx = barco.getPosicionX();
-            int by = 70;
-            // Cabina desplazada 15 píxeles a la derecha
-            g2d.fillRect(bx + 15, by - 15, 20, 15);
-            // Cuerpo del barco
-            g2d.fillRect(bx, by, 80, 30);
+            int posicionXBarco = barco.getPosicionX();
+            int posicionYBarco = 70;
+            graficos2D.fillRect(posicionXBarco + 15, posicionYBarco - 15, 20, 15);
+            graficos2D.fillRect(posicionXBarco, posicionYBarco, 80, 30);
         }
 
-        // 3. Cargas de profundidad
-        g2d.setColor(COLOR_CARGA);
+        graficos2D.setColor(COLOR_CARGA);
         for (CargaProfundidad carga : controlador.getJuego().getCargas()) {
-            g2d.fillOval(carga.getPosX(), carga.getPosY(), 20, 20);
+            graficos2D.fillOval(carga.getPosX(), carga.getPosY(), 20, 20);
         }
 
-        // 4. Submarino
-        Submarino sub = controlador.getJuego().getSubmarino();
-        if (sub != null) {
-            int sx = sub.getPosX();
-            int sy = sub.getPosY();
+        Submarino submarino = controlador.getJuego().getSubmarino();
+        if (submarino != null) {
+            int posicionXSubmarino = submarino.getPosX();
+            int posicionYSubmarino = submarino.getPosY();
 
-            // Torreta
-            g2d.setColor(COLOR_SUBMARINO);
-            g2d.fillRect(sx + 20, sy - 15, 20, 15);
+            graficos2D.setColor(COLOR_SUBMARINO);
+            graficos2D.fillRect(posicionXSubmarino + 20, posicionYSubmarino - 15, 20, 15);
 
-            // Cuerpo principal
-            g2d.fillRoundRect(sx, sy, 60, 30, 15, 15);
+            graficos2D.fillRoundRect(posicionXSubmarino, posicionYSubmarino, 60, 30, 15, 15);
 
-            // Ventanas celestes y redondeadas
-            g2d.setColor(new Color(135, 206, 235));
-            g2d.fillRoundRect(sx + 15, sy + 10, 10, 10, 4, 4);
-            g2d.fillRoundRect(sx + 35, sy + 10, 10, 10, 4, 4);
+            graficos2D.setColor(new Color(135, 206, 235));
+            graficos2D.fillRoundRect(posicionXSubmarino + 15, posicionYSubmarino + 10, 10, 10, 4, 4);
+            graficos2D.fillRoundRect(posicionXSubmarino + 35, posicionYSubmarino + 10, 10, 10, 4, 4);
 
-            // Bordes Rojos
-            g2d.setColor(Color.RED);
-            g2d.drawRect(sx + 20, sy - 15, 20, 15); // Borde torreta
-            g2d.drawRoundRect(sx, sy, 60, 30, 15, 15); // Borde cuerpo
+            graficos2D.setColor(Color.RED);
+            graficos2D.drawRect(posicionXSubmarino + 20, posicionYSubmarino - 15, 20, 15);
+            graficos2D.drawRoundRect(posicionXSubmarino, posicionYSubmarino, 60, 30, 15, 15);
         }
     }
 
     @Override
-    public void paint(Graphics g) {
-        super.paint(g);
-        Graphics2D g2d = (Graphics2D) g;
-        for (ExplosionVisual explosion : visualesExplosiones) {
-            explosion.dibujar(g2d);
+    public void paint(Graphics graficosBase) {
+        super.paint(graficosBase);
+        Graphics2D graficos2D = (Graphics2D) graficosBase;
+        for (ExplosionVisual explosion : listaExplosionesVisuales) {
+            explosion.dibujar(graficos2D);
         }
     }
 
     @Override
-    public void keyPressed(KeyEvent e) {
-        int tecla = e.getKeyCode();
-        if (tecla == KeyEvent.VK_UP || tecla == KeyEvent.VK_W) controlador.moverArriba();
-        else if (tecla == KeyEvent.VK_DOWN || tecla == KeyEvent.VK_S) controlador.moverAbajo();
-        else if (tecla == KeyEvent.VK_LEFT || tecla == KeyEvent.VK_A) controlador.moverIzquierda();
-        else if (tecla == KeyEvent.VK_RIGHT || tecla == KeyEvent.VK_D) controlador.moverDerecha();
+    public void keyPressed(KeyEvent eventoTeclado) {
+        int codigoTecla = eventoTeclado.getKeyCode();
+        if (codigoTecla == KeyEvent.VK_UP || codigoTecla == KeyEvent.VK_W) controlador.moverArriba();
+        else if (codigoTecla == KeyEvent.VK_DOWN || codigoTecla == KeyEvent.VK_S) controlador.moverAbajo();
+        else if (codigoTecla == KeyEvent.VK_LEFT || codigoTecla == KeyEvent.VK_A) controlador.moverIzquierda();
+        else if (codigoTecla == KeyEvent.VK_RIGHT || codigoTecla == KeyEvent.VK_D) controlador.moverDerecha();
     }
 
-    @Override public void keyReleased(KeyEvent e) {}
-    @Override public void keyTyped(KeyEvent e) {}
+    @Override public void keyReleased(KeyEvent eventoTeclado) {}
+    @Override public void keyTyped(KeyEvent eventoTeclado) {}
 
     private class ExplosionVisual {
         int centroX, centroY;
@@ -195,24 +178,24 @@ public class MovimientoView extends JPanel implements KeyListener, ActionListene
             return ticksRestantes <= 0;
         }
 
-        public void dibujar(Graphics2D g2d) {
+        public void dibujar(Graphics2D graficos2D) {
             int ticksTranscurridos = TICKS_TOTALES - ticksRestantes;
-            int finalSize = 60;
-            int initialSize = 10;
+            int tamanoFinal = 60;
+            int tamanoInicial = 10;
 
-            float ratio = (float) ticksTranscurridos / TICKS_TOTALES;
-            int currentSize = initialSize + (int) ((finalSize - initialSize) * ratio);
+            float proporcionTranscurrida = (float) ticksTranscurridos / TICKS_TOTALES;
+            int tamanoActual = tamanoInicial + (int) ((tamanoFinal - tamanoInicial) * proporcionTranscurrida);
 
-            int r = 255;
-            int g = (int)(255 * (1 - ratio));
-            int b = 0;
-            int alpha = (int)(255 * (1 - ratio * ratio));
+            int intensidadRojo = 255;
+            int intensidadVerde = (int)(255 * (1 - proporcionTranscurrida));
+            int intensidadAzul = 0;
+            int nivelTransparencia = (int)(255 * (1 - proporcionTranscurrida * proporcionTranscurrida));
 
-            g2d.setColor(new Color(r, Math.max(0, g), b, Math.max(0, alpha)));
-            g2d.fillOval(centroX - currentSize/2, centroY - currentSize/2, currentSize, currentSize);
+            graficos2D.setColor(new Color(intensidadRojo, Math.max(0, intensidadVerde), intensidadAzul, Math.max(0, nivelTransparencia)));
+            graficos2D.fillOval(centroX - tamanoActual/2, centroY - tamanoActual/2, tamanoActual, tamanoActual);
 
-            g2d.setColor(new Color(255, 255, 255, alpha/2));
-            g2d.drawOval(centroX - currentSize/2, centroY - currentSize/2, currentSize, currentSize);
+            graficos2D.setColor(new Color(255, 255, 255, nivelTransparencia/2));
+            graficos2D.drawOval(centroX - tamanoActual/2, centroY - tamanoActual/2, tamanoActual, tamanoActual);
         }
     }
 }

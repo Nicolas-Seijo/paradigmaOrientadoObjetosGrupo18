@@ -11,8 +11,8 @@ public class Submarino {
     private int salud;
     private int vidas;
 
-    private static final int VelocidadHorizontal = 20;
-    private static final int VelocidadVertical = 25;
+    private static final int VELOCIDAD_HORIZONTAL = 20;
+    private static final int VELOCIDAD_VERTICAL = 25;
 
     public Submarino(int posX, int posY) {
         this.posX = posX;
@@ -25,7 +25,7 @@ public class Submarino {
      * Sube el submarino, respetando el límite mínimo de profundidad.
      */
     public void subir() {
-        posY -= VelocidadVertical;
+        posY -= VELOCIDAD_VERTICAL;
 
         if (posY < Juego.PROFUNDIDAD_MIN_SUBMARINO) {
             posY = Juego.PROFUNDIDAD_MIN_SUBMARINO;
@@ -36,7 +36,7 @@ public class Submarino {
      * Baja el submarino, respetando el límite máximo de profundidad.
      */
     public void bajar() {
-        posY += VelocidadVertical;
+        posY += VELOCIDAD_VERTICAL;
 
         if (posY > Juego.PROFUNDIDAD_MAX_SUBMARINO) {
             posY = Juego.PROFUNDIDAD_MAX_SUBMARINO;
@@ -47,7 +47,7 @@ public class Submarino {
      * Mueve el submarino hacia la izquierda.
      */
     public void moverIzquierda() {
-        posX -= VelocidadHorizontal;
+        posX -= VELOCIDAD_HORIZONTAL;
 
         if (posX < 0) {
             posX = 0;
@@ -58,7 +58,7 @@ public class Submarino {
      * Mueve el submarino hacia la derecha.
      */
     public void moverDerecha() {
-        posX += VelocidadHorizontal;
+        posX += VELOCIDAD_HORIZONTAL;
 
         if (posX > Juego.ANCHO_MAPA) {
             posX = Juego.ANCHO_MAPA;

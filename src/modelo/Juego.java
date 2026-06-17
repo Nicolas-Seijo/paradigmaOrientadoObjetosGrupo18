@@ -24,6 +24,7 @@ public class Juego {
     private Submarino submarino;
     private List<BarcoEnemigo> barcos;
     private List<CargaProfundidad> cargas;
+    private List<int[]> explosionesRecientes;
 
     private int nivel;
     private double velocidadBarcos;
@@ -49,6 +50,7 @@ public class Juego {
         submarino = new Submarino(ANCHO_MAPA / 2, 500);
         barcos = new ArrayList<>();
         cargas = new ArrayList<>();
+        explosionesRecientes = new ArrayList<>();
 
         nivel = 1;
         velocidadBarcos = VELOCIDAD_INICIAL_BARCOS;
@@ -67,6 +69,8 @@ public class Juego {
         if (estaTerminado()) {
             return;
         }
+
+        explosionesRecientes.clear();
 
         generarBarcos();
         moverBarcosYLanzarCargas();
@@ -101,8 +105,8 @@ public class Juego {
                 barcos.add(barco);
                 barcosGenerados++;
             }
-    }
         }
+    }
 
     /**
      * Mueve los barcos, actualiza sus temporizadores y lanza cargas si corresponde.
@@ -150,6 +154,8 @@ public class Juego {
      * Calcula la distancia entre la explosión y el submarino para determinar daño y puntaje.
      */
     private void procesarExplosion(CargaProfundidad carga) {
+        explosionesRecientes.add(new int[]{carga.getPosX() + 10, carga.getProfundidadDetonacion() + 10});
+
         double dx = carga.getPosX() - submarino.getPosX();
         double dy = carga.getProfundidadDetonacion() - submarino.getPosY();
 
@@ -217,6 +223,10 @@ public class Juego {
 
     public List<CargaProfundidad> getCargas() {
         return cargas;
+    }
+
+    public List<int[]> getExplosionesRecientes() {
+        return explosionesRecientes;
     }
 
     public int getNivel() {
