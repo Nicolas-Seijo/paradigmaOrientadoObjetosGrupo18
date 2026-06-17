@@ -50,7 +50,7 @@ public class BarcoEnemigo {
         int profundidadDetonacion = random.nextInt(401) + 300; // entre 300 y 700
         reiniciarTemporizador(random, nivel);
 
-        return new CargaProfundidad(posicionX, 0, profundidadDetonacion, velocidadCargas);
+        return new CargaProfundidad(posicionX + 30, 100, profundidadDetonacion, velocidadCargas);
     }
 
     /**
